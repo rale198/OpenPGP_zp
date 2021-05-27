@@ -2,12 +2,11 @@ package etf.openpgp.sr170398dsl170423d.impl;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 public class Utils {
 	public static String USER_ID(String username, String email)
 	{
-		return username+"_"+email;
+		return username+" <"+email+">";
 	}
 	
 	public static void write(byte[] data, String filename) throws IOException
@@ -19,7 +18,7 @@ public class Utils {
 	
 	public static String PublicKeyFilename(String username, String email, byte[] fingerPrint)
 	{
-		return String.format(Constants.PublicKeyFilePath+"%s_%s.asc", 
-				Utils.USER_ID(username, email), new String(fingerPrint, StandardCharsets.UTF_16));
+		return String.format(Constants.PublicKeyFilePath+"%s.asc", 
+				String.format("%s_%s", username, email));
 	}
 }

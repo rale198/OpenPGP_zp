@@ -15,6 +15,7 @@ import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
@@ -69,12 +70,15 @@ public class Backend {
                 new JcePBESecretKeyEncryptorBuilder(PGPEncryptedData.AES_256, digestSha1)
                 .setProvider(Constants.BouncyCastle).build(password.toCharArray());
 		
+		PGPSignatureSubpacketGenerator ssg = new PGPSignatureSubpacketGenerator();
+		ssg.setKeyExpirationTime(false, Constants.DurationInSeconds);
+		
 		return new PGPKeyRingGenerator(
                 PGPSignature.POSITIVE_CERTIFICATION,
                 masterKeyPair,
                 USER_ID,
                 digestSha1,
-                null,
+                ssg.generate(),
                 null,
                 signerBuilder,
                 encryptor
