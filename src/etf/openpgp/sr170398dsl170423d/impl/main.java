@@ -5,7 +5,7 @@ public class main {
 	public static void main(String[] args) {
 		Backend b = new Backend();
 		
-		if(b.generateKeyPair("luka199", "simko@yahoo.com", 1024, "Simkelion99") == true)
+		if(b.generateKeyPair("tanasko", "tanacko@yahoo.com", 2048, "sv3t4") == true)
 		{
 			System.out.println("KeyPair generated successfully!");
 		}

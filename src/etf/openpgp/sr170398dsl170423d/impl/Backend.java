@@ -1,5 +1,8 @@
 package etf.openpgp.sr170398dsl170423d.impl;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -14,8 +17,12 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRing;
+import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
+import org.bouncycastle.openpgp.bc.BcPGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.jcajce.JcaPGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
@@ -28,6 +35,16 @@ public class Backend {
 	
 	public Backend() {
 		Security.addProvider(new BouncyCastleProvider());
+		
+		File f = new File(Constants.SecretKeyRingFilename);
+		if(!f.exists())
+		{
+			try {
+				f.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public boolean generateKeyPair(String username, String email, int keySize, String password)
@@ -45,6 +62,11 @@ public class Backend {
 			
 			Utils.write(publicKey.getEncoded(), 
 					Utils.PublicKeyFilename(username, email, publicKey.getPublicKey().getFingerprint()));
+			
+			PGPSecretKeyRingCollection secretKeysRing = getSecretKeyRingCollection();
+			PGPSecretKeyRing keyRing = ringGen.generateSecretKeyRing();
+			secretKeysRing = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeysRing, keyRing);
+			Utils.write(secretKeysRing.getEncoded(), Constants.SecretKeyRingFilename);
 			return true;
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
@@ -83,5 +105,11 @@ public class Backend {
                 signerBuilder,
                 encryptor
         );
+	}
+	
+	private PGPSecretKeyRingCollection getSecretKeyRingCollection() throws FileNotFoundException, IOException, PGPException
+	{
+		File f = new File(Constants.SecretKeyRingFilename);
+		return new JcaPGPSecretKeyRingCollection(new FileInputStream(f));
 	}
 }

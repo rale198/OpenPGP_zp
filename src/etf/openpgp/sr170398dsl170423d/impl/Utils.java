@@ -16,6 +16,7 @@ public class Utils {
 		outputStream.close();
 	}
 	
+	//treba izmeniti ovo, da preko gui zadaje naziv fajla
 	public static String PublicKeyFilename(String username, String email, byte[] fingerPrint)
 	{
 		return String.format(Constants.PublicKeyFilePath+"%s.asc", 
