@@ -1,16 +1,19 @@
 package etf.openpgp.sr170398dsl170423d.impl;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.util.Date;
 import java.util.Iterator;
 
+import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
@@ -19,6 +22,8 @@ import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
+import org.bouncycastle.openpgp.PGPLiteralData;
+import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
@@ -28,6 +33,7 @@ import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
+import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.bc.BcPGPSecretKeyRingCollection;
@@ -348,5 +354,82 @@ public class Backend {
 		}
 		
 		return false;
+	}
+	
+	public boolean sendMessage(
+			File message,
+			boolean encrypt,
+			boolean signature,
+			boolean zip,
+			boolean radix64,
+			String symmetricAlgortihm,
+			long secretKeyID,
+			long[] publicKeyIDs,
+			String passphrase)
+	{
+		try {
+			
+			if(signature == true)
+			{
+				PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
+				if(coll.contains(secretKeyID) == true)
+				{
+					byte[] signedMsg = signMessage(passphrase, secretKeyID, coll, message);
+					Utils.write(signedMsg, "C:\\Users\\Sonja\\Desktop\\signed1.gpg");
+					return true;
+				}
+								
+			}
+			throw new PGPException("Msg not signed properely");
+		
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (PGPException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return false;
+	}
+	
+	public byte[] signMessage(String passphrase, long secretKeyID, PGPSecretKeyRingCollection coll, File message) throws PGPException, IOException
+	{
+		PBESecretKeyDecryptor decryptor = 
+				new JcePBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider())
+				.setProvider(Constants.BouncyCastle)
+				.build(passphrase.toCharArray());
+		
+		PGPSecretKeyRing ring = coll.getSecretKeyRing(secretKeyID);
+		PGPSecretKey secretKey = ring.getSecretKey();
+		PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptor);
+		
+		PGPSignatureGenerator signGenerator = new PGPSignatureGenerator(
+				new JcaPGPContentSignerBuilder(secretKey.getPublicKey().getAlgorithm(), PGPUtil.SHA1)
+				.setProvider(Constants.BouncyCastle));
+		
+		signGenerator.init(PGPSignature.BINARY_DOCUMENT, privateKey);
+		ByteArrayOutputStream bArrStream = new ByteArrayOutputStream();
+		BCPGOutputStream bcpgOut = new BCPGOutputStream(bArrStream);
+		signGenerator.generateOnePassVersion(false).encode(bcpgOut);
+		
+		PGPLiteralDataGenerator ldataGen = new PGPLiteralDataGenerator();
+		byte[] messageInBytes = Utils.read(message.getAbsolutePath());
+		
+		OutputStream out = ldataGen.open(
+				bcpgOut,
+				PGPLiteralData.BINARY, 
+				PGPLiteralData.CONSOLE, 
+				messageInBytes.length, 
+				new Date());
+		
+		out.write(messageInBytes);
+		signGenerator.update(messageInBytes);
+		
+		ldataGen.close();
+		
+		signGenerator.generate().encode(bcpgOut);
+		
+		bcpgOut.close();
+		return bArrStream.toByteArray();
 	}
 }

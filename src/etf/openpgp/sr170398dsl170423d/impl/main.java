@@ -1,5 +1,7 @@
 package etf.openpgp.sr170398dsl170423d.impl;
 
+import java.io.File;
+
 public class main {
 
 	public static void main(String[] args) {
@@ -39,8 +41,22 @@ public class main {
 			*/
 		//b.generateKeyPair("andrej", "novak@gmail.com", 2048, "Andrej1998");
 
-		b.importKey("C:\\Users\\Sonja\\Desktop\\andrej_0x2E53A943_SECRET.asc");
+		//b.importKey("C:\\Users\\Sonja\\Desktop\\andrej_0x2E53A943_SECRET.asc");
+		//b.showPrivateKeyRingCollection();
+		/*
+		File f = new File("C:\\Users\\Sonja\\Desktop\\msg.txt");
+		if(b.sendMessage(f, false, true, false, false, null, 7485413189455074384l, null, "Mareza1999") == true)
+		{
+			System.out.println("Successfully signed");
+		}
+		else
+		{
+			System.out.println("not");
+		}
 		b.showPrivateKeyRingCollection();
+		*/
+		
+		
 	}
 
 }

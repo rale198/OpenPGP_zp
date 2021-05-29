@@ -1,6 +1,8 @@
 package etf.openpgp.sr170398dsl170423d.impl;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -15,6 +17,14 @@ public class Utils {
 		FileOutputStream outputStream = new FileOutputStream(filename);
 		outputStream.write(data);
 		outputStream.close();
+	}
+	
+	public static byte[] read(String filename) throws IOException
+	{
+		FileInputStream fIn = new FileInputStream(filename);
+		byte[] ret = fIn.readAllBytes();
+		fIn.close();
+		return ret;
 	}
 	
 	//treba izmeniti ovo, da preko gui zadaje naziv fajla
