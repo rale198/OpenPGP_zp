@@ -29,9 +29,18 @@ public class main {
 		{
 			System.out.println(":(");
 		}
-		*/
-		b.showPrivateKeyRingCollection();
+		
+		if(b.printSecretKey(6409642754754980163l, "C:\\Users\\Sonja\\Desktop\\andre_private.asc") == true)
+		{
+			System.out.println("Success");
+		}
+		else
+			System.err.println(":((");
+			*/
+		//b.generateKeyPair("andrej", "novak@gmail.com", 2048, "Andrej1998");
 
+		b.importKey("C:\\Users\\Sonja\\Desktop\\andrej_0x2E53A943_SECRET.asc");
+		b.showPrivateKeyRingCollection();
 	}
 
 }

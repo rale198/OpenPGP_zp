@@ -288,4 +288,65 @@ public class Backend {
 			e.printStackTrace();
 		}
 	}
+	
+	public boolean exportPublicKey(long keyID, String filepath)
+	{
+		try {
+			PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
+			
+			if(coll.contains(keyID) == true)
+			{
+				printPublicToFile(coll.getSecretKeyRing(keyID), filepath);
+				return true;
+			}
+			
+			PGPPublicKeyRingCollection pcoll = getPublicKeyRingCollection();
+			
+			if(pcoll.contains(keyID) == true)
+			{
+				printPublicToFile(pcoll.getPublicKeyRing(keyID), filepath);
+				return true;
+			}
+			
+			throw new PGPException("There are no key with this keyID!");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (PGPException e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
+	private void printPublicToFile(PGPKeyRing ring, String filepath) throws IOException
+	{
+		PGPPublicKey publicKey = ring.getPublicKey();
+		Utils.write(publicKey.getEncoded(), filepath);
+	}
+	
+	public boolean printSecretKey(long keyID, String filepath)
+	{
+		try {
+			PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
+			
+			if(coll.contains(keyID) == true)
+			{
+				PGPSecretKeyRing ring = coll.getSecretKeyRing(keyID);
+				Utils.write(ring.getEncoded(), filepath);
+				return true;
+			}
+			
+			throw new PGPException("There are no secret keys with this ID");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (PGPException e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
 }
