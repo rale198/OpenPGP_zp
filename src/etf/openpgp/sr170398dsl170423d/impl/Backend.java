@@ -9,6 +9,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.util.Date;
+import java.util.Iterator;
 
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
@@ -20,8 +21,10 @@ import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPPrivateKey;
+import org.bouncycastle.openpgp.PGPPublicKey;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
+import org.bouncycastle.openpgp.PGPSecretKey;
 import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
@@ -164,4 +167,63 @@ public class Backend {
 		return false;
 	}
 	
+	public boolean removeKeyPair(long keyID, String password)
+	{
+		return false;
+	}
+	
+	
+	public void showPrivateKeyRingCollection()
+	{
+		try {
+			PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
+			Iterator<PGPSecretKeyRing> iterator = coll.getKeyRings();
+			
+			while(iterator.hasNext())
+			{
+				PGPSecretKeyRing ring = iterator.next();
+				PGPPublicKey publicKey = ring.getPublicKey();
+				PGPSecretKey secretKey = ring.getSecretKey();
+				long keyIDPriv = secretKey.getKeyID();
+				long keyIDPubl = publicKey.getKeyID();
+				String userIDPriv = secretKey.getUserIDs().next();
+				String userIDPubl = publicKey.getUserIDs().next();
+				
+				System.out.println(userIDPriv +" = "+userIDPubl +"  " +keyIDPriv+" = "+keyIDPubl);
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (PGPException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public void showPublicKeyRingCollection()
+	{
+		try {
+			PGPPublicKeyRingCollection coll = getPublicKeyRingCollection();
+			Iterator<PGPPublicKeyRing> iterator = coll.getKeyRings();
+			
+			while(iterator.hasNext())
+			{
+				PGPPublicKey publicKey = iterator.next().getPublicKey();
+				long keyID = publicKey.getKeyID();
+				Date creationTime = publicKey.getCreationTime();
+				byte[] fingerPrint = publicKey.getFingerprint();
+				String userID = publicKey.getUserIDs().next();
+				
+				System.out.println(userID+" "+keyID+" "+creationTime+" "+fingerPrint);
+				
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (PGPException e) {
+			e.printStackTrace();
+		}
+	}
 }
