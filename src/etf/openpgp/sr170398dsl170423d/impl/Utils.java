@@ -1,5 +1,6 @@
 package etf.openpgp.sr170398dsl170423d.impl;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -21,5 +22,18 @@ public class Utils {
 	{
 		return String.format(Constants.PublicKeyFilePath+"%s.asc", 
 				String.format("%s_%s", username, email));
+	}
+	
+	public static void createRingFile(String filename)
+	{
+		File f = new File(filename);
+		if(!f.exists())
+		{
+			try {
+				f.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

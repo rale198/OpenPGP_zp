@@ -5,9 +5,9 @@ public class main {
 	public static void main(String[] args) {
 		Backend b = new Backend();
 		
-		if(b.generateKeyPair("tanasko", "tanacko@yahoo.com", 2048, "sv3t4") == true)
+		if(b.importKey("C:\\Users\\Sonja\\Desktop\\Rales123.asc") == true)
 		{
-			System.out.println("KeyPair generated successfully!");
+			System.out.println("Key improted successfully!");
 		}
 		else
 			System.out.println(":((((");
