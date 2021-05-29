@@ -35,12 +35,16 @@ import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.jcajce.JcaPGPSecretKeyRing;
 import org.bouncycastle.openpgp.jcajce.JcaPGPSecretKeyRingCollection;
+import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
 import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
+import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
+import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
+import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 
 public class Backend {
@@ -169,10 +173,62 @@ public class Backend {
 	
 	public boolean removeKeyPair(long keyID, String password)
 	{
+		try {
+			PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
+			
+			if(coll.contains(keyID) == true) {
+				
+				PBESecretKeyDecryptor decryptor = 
+						new JcePBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider())
+						.setProvider(Constants.BouncyCastle)
+						.build(password.toCharArray());
+				
+				PGPSecretKeyRing ring = coll.getSecretKeyRing(keyID);
+				PGPSecretKey secretKey = ring.getSecretKey();
+				PGPPrivateKey privateKey = secretKey.extractPrivateKey(decryptor);
+				
+				coll = PGPSecretKeyRingCollection.removeSecretKeyRing(coll, ring);
+				Utils.write(coll.getEncoded(), Constants.SecretKeyRingFilename);
+				
+				return true;
+			}
+			
+			throw new PGPException("Ring collection doesn't have this keyring!");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (PGPException e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 	
-	
+	public boolean removeImportKey(long keyID)
+	{
+		try {
+			PGPPublicKeyRingCollection coll = getPublicKeyRingCollection();
+			
+			if(coll.contains(keyID) == true)
+			{
+				
+				PGPPublicKeyRing ring = coll.getPublicKeyRing(keyID);
+				coll = PGPPublicKeyRingCollection.removePublicKeyRing(coll, ring);
+				Utils.write(coll.getEncoded(), Constants.PublicKeyRingFilename);
+				return true;
+			}
+			
+			throw new PGPException("Ring collection doesn't have this keyring!");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (PGPException e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
 	public void showPrivateKeyRingCollection()
 	{
 		try {
@@ -182,14 +238,20 @@ public class Backend {
 			while(iterator.hasNext())
 			{
 				PGPSecretKeyRing ring = iterator.next();
+				PGPPublicKey publ = ring.getPublicKey();
+				if(publ == null)
+				{
+					System.out.println("NUll");
+				}
 				PGPPublicKey publicKey = ring.getPublicKey();
 				PGPSecretKey secretKey = ring.getSecretKey();
-				long keyIDPriv = secretKey.getKeyID();
-				long keyIDPubl = publicKey.getKeyID();
-				String userIDPriv = secretKey.getUserIDs().next();
-				String userIDPubl = publicKey.getUserIDs().next();
 				
-				System.out.println(userIDPriv +" = "+userIDPubl +"  " +keyIDPriv+" = "+keyIDPubl);
+				long keyID = publicKey.getKeyID();
+				Date creationTime = publicKey.getCreationTime();
+				byte[] fingerPrint = publicKey.getFingerprint();
+				String userID = publicKey.getUserIDs().next();
+				
+				System.out.println(userID+" "+keyID+" "+creationTime+" "+fingerPrint);
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
