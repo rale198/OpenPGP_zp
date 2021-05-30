@@ -411,8 +411,13 @@ public class Backend {
 						out.write(MSG);
 						out.close();
 					}
-				}
-								
+				}		
+			}
+			else
+			{
+				byte[] litData = getLiteralMsg(currentPath);
+				currentPath = Constants.TempDir +"literaled.gpg";
+				Utils.write(litData, currentPath);
 			}
 			
 			if(encrypt == true)
@@ -440,11 +445,10 @@ public class Backend {
 				for(PGPPublicKey key: receivers)
 				{
 					encGen.addMethod(
-							new JcePublicKeyKeyEncryptionMethodGenerator(key).setProvider(Constants.BouncyCastle));
+							new JcePublicKeyKeyEncryptionMethodGenerator(key)
+							.setProvider(Constants.BouncyCastle));
 				}
-				byte[] MSG = (zip)?
-							 (signature? compressMessage(currentPath) : compressMessageWithLiteralData(currentPath)):
-						     (Utils.read(currentPath));
+				byte[] MSG = (zip)?(compressMessage(currentPath)):(Utils.read(currentPath));
 				
 				currentPath = Constants.TempDir +"encrypted.pgp";
 				OutputStream out = (radix64)?
@@ -477,7 +481,7 @@ public class Backend {
 	{
 		ByteArrayOutputStream bArrStream = new ByteArrayOutputStream();
 		PGPUtil.writeFileToLiteralData(bArrStream, PGPLiteralData.BINARY, new File(filename));
-		
+
 		return bArrStream.toByteArray();
 	}
 	
@@ -496,15 +500,6 @@ public class Backend {
 	}
 	
 	
-	private byte[] compressMessageWithLiteralData(String filename) throws IOException
-	{
-		ByteArrayOutputStream bArrStream = new ByteArrayOutputStream();
-		PGPCompressedDataGenerator comData = new PGPCompressedDataGenerator(CompressionAlgorithmTags.ZIP);
-		
-		PGPUtil.writeFileToLiteralData(comData.open(bArrStream), PGPLiteralData.BINARY, new File(filename));
-		
-		return bArrStream.toByteArray();
-	}
 	private ArrayList<PGPPublicKey> getAllReceivers(long[] publicKeyIDs) throws FileNotFoundException, IOException, PGPException
 	{
 		ArrayList<PGPPublicKey> publicKeys = new ArrayList<>();

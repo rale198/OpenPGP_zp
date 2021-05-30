@@ -49,7 +49,7 @@ public class main {
 		arr[0] = -7506044711471145476l;
 		arr[1] = 7485413189455074384l;
 		arr[2] = 6409642754754980163l;
-		if(b.sendMessage(f, true, false, true, true, Constants.TripleDES, 7482258956263966246l, arr, "Rale1998") == true)
+		if(b.sendMessage(f, true, true, true, false, Constants.TripleDES, 7482258956263966246l, arr, "Rale1998") == true)
 		{
 			System.out.println("Successfully signed");
 		}
