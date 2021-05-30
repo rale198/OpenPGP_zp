@@ -43,9 +43,13 @@ public class main {
 
 		//b.importKey("C:\\Users\\Sonja\\Desktop\\andrej_0x2E53A943_SECRET.asc");
 		//b.showPrivateKeyRingCollection();
-		/*
+
 		File f = new File("C:\\Users\\Sonja\\Desktop\\msg.txt");
-		if(b.sendMessage(f, false, true, false, false, null, 7485413189455074384l, null, "Mareza1999") == true)
+		long[] arr = new long[3];
+		arr[0] = -7506044711471145476l;
+		arr[1] = 7485413189455074384l;
+		arr[2] = 6409642754754980163l;
+		if(b.sendMessage(f, true, false, true, true, Constants.TripleDES, 7482258956263966246l, arr, "Rale1998") == true)
 		{
 			System.out.println("Successfully signed");
 		}
@@ -53,10 +57,9 @@ public class main {
 		{
 			System.out.println("not");
 		}
+		
+		
 		b.showPrivateKeyRingCollection();
-		*/
-		
-		
 	}
 
 }

@@ -4,20 +4,30 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.Security;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 
+import org.bouncycastle.bcpg.ArmoredOutputStream;
 import org.bouncycastle.bcpg.BCPGOutputStream;
+import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
+import org.bouncycastle.jcajce.BCFKSLoadStoreParameter.EncryptionAlgorithm;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedData;
+import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRing;
@@ -50,8 +60,12 @@ import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
+import org.bouncycastle.openpgp.operator.jcajce.JcePBEKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyKeyEncryptionMethodGenerator;
+
 
 public class Backend {
 	
@@ -368,20 +382,87 @@ public class Backend {
 			String passphrase)
 	{
 		try {
+			if(signature == false && encrypt == false)
+				throw new PGPException("You should have at least one of those two(Encryption, Signature)");
 			
+			String filepath = message.getAbsolutePath();
+			String currentPath = filepath;
+			String finalPath = message.getAbsolutePath().split("\\.")[0]+"_"+System.currentTimeMillis()+".gpg";
 			if(signature == true)
 			{
 				PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
 				if(coll.contains(secretKeyID) == true)
 				{
 					byte[] signedMsg = signMessage(passphrase, secretKeyID, coll, message);
-					Utils.write(signedMsg, "C:\\Users\\Sonja\\Desktop\\signed1.gpg");
-					return true;
+					
+					currentPath = Constants.TempDir+"signed.gpg";
+					Utils.write(signedMsg, currentPath);
+					
+					if(encrypt == false)
+					{
+						byte[] MSG = (zip)?
+								 (compressMessage(currentPath)):
+							     (signedMsg);
+						
+						OutputStream out = (radix64)?
+								   (new ArmoredOutputStream(new FileOutputStream(currentPath))):
+								   (new FileOutputStream(currentPath));
+						
+						out.write(MSG);
+						out.close();
+					}
 				}
 								
 			}
-			throw new PGPException("Msg not signed properely");
-		
+			
+			if(encrypt == true)
+			{
+				int algorithmTag = 0;
+				switch(symmetricAlgortihm)
+				{
+					case Constants.CAST5:
+						algorithmTag = PGPEncryptedDataGenerator.CAST5;
+						break;
+					case Constants.TripleDES:
+						algorithmTag = PGPEncryptedDataGenerator.TRIPLE_DES;
+						break;
+				}
+				
+				PGPEncryptedDataGenerator encGen = new PGPEncryptedDataGenerator
+						(new JcePGPDataEncryptorBuilder(algorithmTag)
+								.setWithIntegrityPacket(true)
+								.setSecureRandom(new SecureRandom())
+								.setProvider(Constants.BouncyCastle)
+						);
+				
+				ArrayList<PGPPublicKey> receivers = getAllReceivers(publicKeyIDs);
+				
+				for(PGPPublicKey key: receivers)
+				{
+					encGen.addMethod(
+							new JcePublicKeyKeyEncryptionMethodGenerator(key).setProvider(Constants.BouncyCastle));
+				}
+				byte[] MSG = (zip)?
+							 (signature? compressMessage(currentPath) : compressMessageWithLiteralData(currentPath)):
+						     (Utils.read(currentPath));
+				
+				currentPath = Constants.TempDir +"encrypted.pgp";
+				OutputStream out = (radix64)?
+								   (new ArmoredOutputStream(new FileOutputStream(currentPath))):
+								   (new FileOutputStream(currentPath));
+				
+				
+				OutputStream cOut = encGen.open(out, MSG.length);
+				cOut.write(MSG);
+				
+				cOut.close();
+				encGen.close();
+				out.close();
+			}
+			
+			Files.copy(Path.of(currentPath), Path.of(finalPath));
+			return true;
+			
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (PGPException e) {
@@ -390,6 +471,62 @@ public class Backend {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	private byte[] getLiteralMsg(String filename) throws IOException
+	{
+		ByteArrayOutputStream bArrStream = new ByteArrayOutputStream();
+		PGPUtil.writeFileToLiteralData(bArrStream, PGPLiteralData.BINARY, new File(filename));
+		
+		return bArrStream.toByteArray();
+	}
+	
+	private byte[] compressMessage(String filename) throws IOException
+	{
+		ByteArrayOutputStream bArrStream = new ByteArrayOutputStream();
+		PGPCompressedDataGenerator comData = new PGPCompressedDataGenerator(CompressionAlgorithmTags.ZIP);
+		
+		//PGPUtil.writeFileToLiteralData(comData.open(bArrStream), PGPLiteralData.BINARY, new File(filename));
+		byte[] msg = Utils.read(filename);
+		OutputStream cOut = comData.open(bArrStream);
+		cOut.write(msg);
+		comData.close();
+		
+		return bArrStream.toByteArray();
+	}
+	
+	
+	private byte[] compressMessageWithLiteralData(String filename) throws IOException
+	{
+		ByteArrayOutputStream bArrStream = new ByteArrayOutputStream();
+		PGPCompressedDataGenerator comData = new PGPCompressedDataGenerator(CompressionAlgorithmTags.ZIP);
+		
+		PGPUtil.writeFileToLiteralData(comData.open(bArrStream), PGPLiteralData.BINARY, new File(filename));
+		
+		return bArrStream.toByteArray();
+	}
+	private ArrayList<PGPPublicKey> getAllReceivers(long[] publicKeyIDs) throws FileNotFoundException, IOException, PGPException
+	{
+		ArrayList<PGPPublicKey> publicKeys = new ArrayList<>();
+		PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
+		PGPPublicKeyRingCollection pcoll = getPublicKeyRingCollection();
+		
+		for(int i = 0; i < publicKeyIDs.length; i++)
+		{
+			if(coll.contains(publicKeyIDs[i]) == true)
+			{
+				PGPSecretKeyRing keyRing = coll.getSecretKeyRing(publicKeyIDs[i]);
+				publicKeys.add(keyRing.getPublicKey());
+				continue;
+			}
+			
+			if(pcoll.contains(publicKeyIDs[i]) == true)
+			{
+				PGPPublicKeyRing keyRing = pcoll.getPublicKeyRing(publicKeyIDs[i]);
+				publicKeys.add(keyRing.getPublicKey());
+			}
+		}
+		return publicKeys;
 	}
 	
 	public byte[] signMessage(String passphrase, long secretKeyID, PGPSecretKeyRingCollection coll, File message) throws PGPException, IOException
@@ -432,4 +569,5 @@ public class Backend {
 		bcpgOut.close();
 		return bArrStream.toByteArray();
 	}
+
 }
