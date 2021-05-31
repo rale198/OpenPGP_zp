@@ -10,6 +10,7 @@ public class Constants {
 	public static final String PublicKeyRingFilename = "keys/publickey_ring.pgp";
 	public static final String TempDir = "temp/";
 	
+	public static final String VerifiedFilename = "result.txt";
 	public static final String TripleDES = "3DES";
 	public static final String CAST5 = "CAST5";
 	

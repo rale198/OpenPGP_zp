@@ -1,5 +1,6 @@
 package etf.openpgp.sr170398dsl170423d.impl;
 
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,20 +24,25 @@ import org.bouncycastle.bcpg.BCPGOutputStream;
 import org.bouncycastle.bcpg.CompressionAlgorithmTags;
 import org.bouncycastle.bcpg.HashAlgorithmTags;
 import org.bouncycastle.bcpg.PublicKeyAlgorithmTags;
-import org.bouncycastle.jcajce.BCFKSLoadStoreParameter.EncryptionAlgorithm;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openpgp.PGPCompressedData;
 import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
 import org.bouncycastle.openpgp.PGPEncryptedData;
 import org.bouncycastle.openpgp.PGPEncryptedDataGenerator;
+import org.bouncycastle.openpgp.PGPEncryptedDataList;
 import org.bouncycastle.openpgp.PGPException;
 import org.bouncycastle.openpgp.PGPKeyPair;
 import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
+import org.bouncycastle.openpgp.PGPMarker;
 import org.bouncycastle.openpgp.PGPObjectFactory;
+import org.bouncycastle.openpgp.PGPOnePassSignature;
+import org.bouncycastle.openpgp.PGPOnePassSignatureList;
 import org.bouncycastle.openpgp.PGPPrivateKey;
 import org.bouncycastle.openpgp.PGPPublicKey;
+import org.bouncycastle.openpgp.PGPPublicKeyEncryptedData;
 import org.bouncycastle.openpgp.PGPPublicKeyRing;
 import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSecretKey;
@@ -44,6 +50,7 @@ import org.bouncycastle.openpgp.PGPSecretKeyRing;
 import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.PGPSignature;
 import org.bouncycastle.openpgp.PGPSignatureGenerator;
+import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPUtil;
 import org.bouncycastle.openpgp.bc.BcPGPSecretKeyRingCollection;
@@ -57,14 +64,18 @@ import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
 import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
+import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBEKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
+import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyDataDecryptorFactoryBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyKeyEncryptionMethodGenerator;
+import org.bouncycastle.util.io.Streams;
 
 
 public class Backend {
@@ -74,8 +85,6 @@ public class Backend {
 		Utils.createRingFile(Constants.SecretKeyRingFilename);
 		Utils.createRingFile(Constants.PublicKeyRingFilename);
 	}
-	
-	
 	
 	public boolean generateKeyPair(String username, String email, int keySize, String password)
 	{
@@ -565,4 +574,168 @@ public class Backend {
 		return bArrStream.toByteArray();
 	}
 
+	public String getPassphrase(String s)
+	{
+		System.out.println("Enter the password for User id: "+ s);
+		return "Andrej1998";
+	}
+	
+	public String[] receiveMessage(String filepath)
+	{
+		InputStream in;
+		String passphrase = null;
+		Object message = null;
+		boolean entered = false;
+		String[] returnMsg = new String[2];
+		
+		try {
+			in = PGPUtil.getDecoderStream(new FileInputStream(filepath));
+			
+			JcaPGPObjectFactory pgpF = new JcaPGPObjectFactory(in);
+            PGPEncryptedDataList enc;
+
+            Object o = pgpF.nextObject();
+            PGPPublicKeyEncryptedData   pbe = null;
+
+            // mozda ne treba ovo nemam pojma
+            if(o instanceof PGPMarker)
+            {
+            	o = pgpF.nextObject();
+            }
+            
+            if(o instanceof PGPEncryptedDataList)
+            {
+            	entered = true;
+                PGPSecretKey secretKey = null;
+                
+            	enc = (PGPEncryptedDataList)o;
+            	Iterator<PGPEncryptedData> it = enc.getEncryptedDataObjects();
+            	PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
+            	PGPPrivateKey sKey = null;
+                
+                while (sKey == null && it.hasNext())
+                {
+                    pbe = (PGPPublicKeyEncryptedData)it.next();
+                    
+                    if(coll.contains(pbe.getKeyID()) == true)
+                    {
+                    	secretKey = coll.getSecretKey(pbe.getKeyID());
+                    	passphrase = getPassphrase(secretKey.getUserIDs().next());
+                    
+                    	sKey = secretKey
+                    			.extractPrivateKey(
+                    			new JcePBESecretKeyDecryptorBuilder()
+                    			.setProvider(Constants.BouncyCastle)
+                    			.build(passphrase.toCharArray()));
+                    }
+                }
+                
+                if (sKey == null)
+                {
+                    throw new IllegalArgumentException("secret key for message not found.");
+                }
+                
+                InputStream clear = pbe
+                		.getDataStream(
+                				new JcePublicKeyDataDecryptorFactoryBuilder()
+                				.setProvider(Constants.BouncyCastle)
+                				.build(sKey));
+                
+                pgpF = new JcaPGPObjectFactory(clear);
+                
+                message = pgpF.nextObject();
+            }
+            
+            if (message instanceof PGPCompressedData)
+            {
+                PGPCompressedData cData = (PGPCompressedData)message;
+                pgpF = new JcaPGPObjectFactory(cData.getDataStream());
+                
+                message = pgpF.nextObject();
+            }
+            
+            if (message instanceof PGPOnePassSignatureList)
+            {
+            	entered = true;
+            	
+            	PGPOnePassSignatureList p1 = (PGPOnePassSignatureList)message;                
+                PGPOnePassSignature ops = p1.get(0);
+                    
+                PGPLiteralData p2 = (PGPLiteralData)pgpF.nextObject();
+
+                InputStream dIn = p2.getInputStream();
+
+                PGPPublicKeyRingCollection  pgpRing = getPublicKeyRingCollection();
+                PGPPublicKey key = pgpRing.getPublicKey(ops.getKeyID());
+
+                FileOutputStream out = new FileOutputStream("result.txt");
+
+                ops.init(new JcaPGPContentVerifierBuilderProvider()
+                		.setProvider(Constants.BouncyCastle), key);
+
+                byte[] msgInBytes= dIn.readAllBytes();
+                out.write(msgInBytes);
+                ops.update(msgInBytes);
+                out.close();
+                
+                PGPSignatureList p3 = (PGPSignatureList)pgpF.nextObject();
+
+                if (ops.verify(p3.get(0)))
+                {
+                    returnMsg[0] = new String("Signature verified successfully!");
+                }
+                else
+                {
+                    returnMsg[0] = new String("Signature verification failed!");
+                }
+                message = pgpF.nextObject();
+            }
+            
+            if(message instanceof PGPLiteralData)
+            {
+            	PGPLiteralData ld = (PGPLiteralData)message;
+
+                String outFileName = ld.getFileName();
+                if (outFileName.length() == 0)
+                {
+                    outFileName = "name.txt";
+                }
+                System.out.println(outFileName);
+                InputStream unc = ld.getInputStream();
+                OutputStream fOut = new BufferedOutputStream(new FileOutputStream(outFileName));
+
+                Streams.pipeAll(unc, fOut);
+
+                fOut.close();
+            }
+            if(entered == false)
+            {
+            	throw new PGPException("message is not a simple encrypted file - type unknown.");
+            }
+            
+            if (pbe.isIntegrityProtected())
+            {
+                if (!pbe.verify())
+                {
+                	returnMsg[1] = new String("message failed integrity check");
+                }
+                else
+                {
+                    returnMsg[1] = new String("message integrity check passed");
+                }
+            }
+            
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		catch(PGPException e2)
+		{
+			e2.printStackTrace();
+		}
+	
+		return returnMsg;
+	}
 }
