@@ -27,13 +27,6 @@ public class Utils {
 		return ret;
 	}
 	
-	//treba izmeniti ovo, da preko gui zadaje naziv fajla
-	public static String PublicKeyFilename(String username, String email, byte[] fingerPrint)
-	{
-		return String.format(Constants.PublicKeyFilePath+"%s.asc", 
-				String.format("%s_%s", username, email));
-	}
-	
 	public static void createRingFile(String filename)
 	{
 		File f = new File(filename);

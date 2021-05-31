@@ -7,16 +7,23 @@ public class main {
 
 	public static void main(String[] args) {
 		Backend b = new Backend();
+		//b.generateKeyPair("spasoje", "spas@gmail.com", 4096, "123");
+		//b.exportPublicKey(-1254776031991395818l, "spas.asc");
 		//insert(b);
 		receive(b);
-		show(b);
+		//show(b);
+		//System.out.println(b.isUsingEncryption("C:\\Users\\Sonja\\Desktop\\msg_1.gpg"));
 	}
 
 	public static void show(Backend b)
 	{
-		b.showPrivateKeyRingCollection();
+		ArrayList<RingOutput> r = b.showPrivateKeyRingCollection();
+		for(RingOutput rr: r)
+			System.out.println(rr);
 		System.out.println("---");
-		b.showPublicKeyRingCollection();
+		r = b.showPublicKeyRingCollection();
+		for(RingOutput rr: r)
+			System.out.println(rr);
 	}
 	public static void insert(Backend b)
 	{
@@ -25,7 +32,7 @@ public class main {
 		receivers[0] = -7882090506529290298l;
 		receivers[1] = 2657159746924513900l;
 		b.sendMessage(f, 
-				false, true, true, true, 
+				true, false, false, true, 
 				Constants.CAST5, 
 				2657159746924513900l, 
 				receivers, 

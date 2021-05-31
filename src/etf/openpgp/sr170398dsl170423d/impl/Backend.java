@@ -15,6 +15,10 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.text.DateFormat;
+import java.text.Format;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -78,6 +82,7 @@ import org.bouncycastle.openpgp.operator.jcajce.JcePublicKeyKeyEncryptionMethodG
 import org.bouncycastle.util.io.Streams;
 
 
+
 public class Backend {
 	
 	public Backend() {
@@ -96,7 +101,6 @@ public class Backend {
 					new JcaPGPKeyPair(PublicKeyAlgorithmTags.RSA_GENERAL, kpGen.generateKeyPair(), new Date());
 			
 			PGPKeyRingGenerator ringGen = this.generateKeyRingGenerator(Utils.USER_ID(username, email), password, keyPair);
-			
 			PGPPublicKeyRing publicKey = ringGen.generatePublicKeyRing();
 			
 			PGPSecretKeyRingCollection secretKeysRing = getSecretKeyRingCollection();
@@ -255,9 +259,10 @@ public class Backend {
 		
 		return false;
 	}
-	public void showPrivateKeyRingCollection()
+	public ArrayList<RingOutput> showPrivateKeyRingCollection()
 	{
 		try {
+			ArrayList<RingOutput> ret = new ArrayList<>();
 			PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
 			Iterator<PGPSecretKeyRing> iterator = coll.getKeyRings();
 			
@@ -270,15 +275,28 @@ public class Backend {
 					System.out.println("NUll");
 				}
 				PGPPublicKey publicKey = ring.getPublicKey();
-				PGPSecretKey secretKey = ring.getSecretKey();
 				
+				Date dateUntil = new Date(System.currentTimeMillis() + 1000*publicKey.getValidSeconds());
 				long keyID = publicKey.getKeyID();
 				Date creationTime = publicKey.getCreationTime();
 				byte[] fingerPrint = publicKey.getFingerprint();
 				String userID = publicKey.getUserIDs().next();
+				int first = userID.indexOf('<');
+				int second = userID.indexOf('>');
+				String name = userID.substring(0, first - 1);
+				String email = userID.substring(first + 1, second);
 				
-				System.out.println(userID+" "+keyID+" "+creationTime+" "+fingerPrint);
+				RingOutput r = new RingOutput();
+				r.setEmail(email);
+				r.setFingerPrint(fingerPrint);
+				r.setKeyID(keyID);
+				r.setName(name);
+				r.setValidFrom(creationTime);
+				r.setValidUntil(dateUntil);
+				ret.add(r);
 			}
+			
+			return ret;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -286,26 +304,40 @@ public class Backend {
 		} catch (PGPException e) {
 			e.printStackTrace();
 		}
-		
+		return null;
 	}
 	
-	public void showPublicKeyRingCollection()
+	public ArrayList<RingOutput> showPublicKeyRingCollection()
 	{
 		try {
 			PGPPublicKeyRingCollection coll = getPublicKeyRingCollection();
 			Iterator<PGPPublicKeyRing> iterator = coll.getKeyRings();
-			
+			ArrayList<RingOutput> ret = new ArrayList<>();
 			while(iterator.hasNext())
 			{
 				PGPPublicKey publicKey = iterator.next().getPublicKey();
+				Date dateUntil = new Date(System.currentTimeMillis() + 1000*publicKey.getValidSeconds());
 				long keyID = publicKey.getKeyID();
 				Date creationTime = publicKey.getCreationTime();
 				byte[] fingerPrint = publicKey.getFingerprint();
 				String userID = publicKey.getUserIDs().next();
+				int first = userID.indexOf('<');
+				int second = userID.indexOf('>');
+				String name = userID.substring(0, first - 1);
+				String email = userID.substring(first + 1, second);
 				
-				System.out.println(userID+" "+keyID+" "+creationTime+" "+fingerPrint);
+				RingOutput r = new RingOutput();
+				r.setEmail(email);
+				r.setFingerPrint(fingerPrint);
+				r.setKeyID(keyID);
+				r.setName(name);
+				r.setValidFrom(creationTime);
+				r.setValidUntil(dateUntil);
+				ret.add(r);
 				
 			}
+			
+			return ret;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -313,6 +345,7 @@ public class Backend {
 		} catch (PGPException e) {
 			e.printStackTrace();
 		}
+		return null;
 	}
 	
 	public boolean exportPublicKey(long keyID, String filepath)
@@ -530,7 +563,11 @@ public class Backend {
 		return publicKeys;
 	}
 	
-	public byte[] signMessage(String passphrase, long secretKeyID, PGPSecretKeyRingCollection coll, File message) throws PGPException, IOException
+	public byte[] signMessage(String passphrase, 
+			long secretKeyID, 
+			PGPSecretKeyRingCollection coll, 
+			File message) 
+			throws PGPException, IOException
 	{
 		PBESecretKeyDecryptor decryptor = 
 				new JcePBESecretKeyDecryptorBuilder(new BcPGPDigestCalculatorProvider())
@@ -728,5 +765,53 @@ public class Backend {
 		}
 	
 		return returnMsg;
+	}
+	
+	public String isUsingEncryption(String filepath)
+	{
+		InputStream in;
+		String retStr = null;
+		try {
+			in = PGPUtil.getDecoderStream(new FileInputStream(filepath));
+			
+			JcaPGPObjectFactory pgpF = new JcaPGPObjectFactory(in);
+            PGPEncryptedDataList enc;
+
+            Object o = pgpF.nextObject();
+            PGPPublicKeyEncryptedData   pbe = null;
+            
+            if(o instanceof PGPEncryptedDataList)
+            {
+                PGPSecretKey secretKey = null;
+                
+            	enc = (PGPEncryptedDataList)o;
+            	Iterator<PGPEncryptedData> it = enc.getEncryptedDataObjects();
+            	PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
+            	PGPPrivateKey sKey = null;
+                
+                while (sKey == null && it.hasNext())
+                {
+                    pbe = (PGPPublicKeyEncryptedData)it.next();
+                    
+                    if(coll.contains(pbe.getKeyID()) == true)
+                    {
+                    	secretKey = coll.getSecretKey(pbe.getKeyID());
+                    	retStr = secretKey.getUserIDs().next();
+                    	return retStr;
+                    }
+                }
+            }
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		catch(PGPException e2)
+		{
+			e2.printStackTrace();
+		}
+	
+		return retStr;
 	}
 }
