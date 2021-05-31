@@ -99,9 +99,6 @@ public class Backend {
 			
 			PGPPublicKeyRing publicKey = ringGen.generatePublicKeyRing();
 			
-			Utils.write(publicKey.getEncoded(), 
-					Utils.PublicKeyFilename(username, email, publicKey.getPublicKey().getFingerprint()));
-			
 			PGPSecretKeyRingCollection secretKeysRing = getSecretKeyRingCollection();
 			PGPSecretKeyRing keyRing = ringGen.generateSecretKeyRing();
 			secretKeysRing = PGPSecretKeyRingCollection.addSecretKeyRing(secretKeysRing, keyRing);
@@ -577,16 +574,15 @@ public class Backend {
 	public String getPassphrase(String s)
 	{
 		System.out.println("Enter the password for User id: "+ s);
-		return "Andrej1998";
+		return "123";
 	}
 	
-	public String[] receiveMessage(String filepath)
+	public ArrayList<String> receiveMessage(String filepath)
 	{
 		InputStream in;
 		String passphrase = null;
-		Object message = null;
-		boolean entered = false;
-		String[] returnMsg = new String[2];
+		boolean signFlag = false, encryptFlag = false;
+		ArrayList<String> returnMsg = new ArrayList<String>();
 		
 		try {
 			in = PGPUtil.getDecoderStream(new FileInputStream(filepath));
@@ -596,16 +592,10 @@ public class Backend {
 
             Object o = pgpF.nextObject();
             PGPPublicKeyEncryptedData   pbe = null;
-
-            // mozda ne treba ovo nemam pojma
-            if(o instanceof PGPMarker)
-            {
-            	o = pgpF.nextObject();
-            }
             
             if(o instanceof PGPEncryptedDataList)
             {
-            	entered = true;
+            	encryptFlag = true;
                 PGPSecretKey secretKey = null;
                 
             	enc = (PGPEncryptedDataList)o;
@@ -643,22 +633,23 @@ public class Backend {
                 
                 pgpF = new JcaPGPObjectFactory(clear);
                 
-                message = pgpF.nextObject();
+                o = pgpF.nextObject();
+                
             }
             
-            if (message instanceof PGPCompressedData)
+            if (o instanceof PGPCompressedData)
             {
-                PGPCompressedData cData = (PGPCompressedData)message;
+                PGPCompressedData cData = (PGPCompressedData)o;
                 pgpF = new JcaPGPObjectFactory(cData.getDataStream());
                 
-                message = pgpF.nextObject();
+                o = pgpF.nextObject();
             }
             
-            if (message instanceof PGPOnePassSignatureList)
+            if (o instanceof PGPOnePassSignatureList)
             {
-            	entered = true;
+            	signFlag = true;
             	
-            	PGPOnePassSignatureList p1 = (PGPOnePassSignatureList)message;                
+            	PGPOnePassSignatureList p1 = (PGPOnePassSignatureList)o;                
                 PGPOnePassSignature ops = p1.get(0);
                     
                 PGPLiteralData p2 = (PGPLiteralData)pgpF.nextObject();
@@ -682,18 +673,18 @@ public class Backend {
 
                 if (ops.verify(p3.get(0)))
                 {
-                    returnMsg[0] = new String("Signature verified successfully!");
+                    returnMsg.add("Signature verified successfully!");
                 }
                 else
                 {
-                    returnMsg[0] = new String("Signature verification failed!");
+                    returnMsg.add("Signature verification failed!");
                 }
-                message = pgpF.nextObject();
+                o = pgpF.nextObject();
             }
             
-            if(message instanceof PGPLiteralData)
+            if(o instanceof PGPLiteralData)
             {
-            	PGPLiteralData ld = (PGPLiteralData)message;
+            	PGPLiteralData ld = (PGPLiteralData)o;
 
                 String outFileName = ld.getFileName();
                 if (outFileName.length() == 0)
@@ -708,20 +699,20 @@ public class Backend {
 
                 fOut.close();
             }
-            if(entered == false)
+            if(signFlag == false && encryptFlag == false)
             {
             	throw new PGPException("message is not a simple encrypted file - type unknown.");
             }
             
-            if (pbe.isIntegrityProtected())
+            if (encryptFlag == true && pbe.isIntegrityProtected())
             {
                 if (!pbe.verify())
                 {
-                	returnMsg[1] = new String("message failed integrity check");
+                	returnMsg.add("message failed integrity check");
                 }
                 else
                 {
-                    returnMsg[1] = new String("message integrity check passed");
+                    returnMsg.add("message integrity check passed");
                 }
             }
             
