@@ -61,6 +61,12 @@ public class main {
 		*/
 		
 		//String[] msg = b.receiveMessage("C:\\Users\\Sonja\\Desktop\\raliman.txt.sig");
+		b.generateKeyPair("srna", "srna@eunet.rs", 2048, "123");
+		System.out.println("Private key ring collection");
+		b.showPrivateKeyRingCollection();
+		System.out.println("---");
+		System.out.println("Public key ring collection");
+		b.showPublicKeyRingCollection();
 	}
 
 }
