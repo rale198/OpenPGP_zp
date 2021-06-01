@@ -15,6 +15,8 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -36,8 +38,6 @@ import org.bouncycastle.openpgp.PGPKeyRing;
 import org.bouncycastle.openpgp.PGPKeyRingGenerator;
 import org.bouncycastle.openpgp.PGPLiteralData;
 import org.bouncycastle.openpgp.PGPLiteralDataGenerator;
-import org.bouncycastle.openpgp.PGPMarker;
-import org.bouncycastle.openpgp.PGPObjectFactory;
 import org.bouncycastle.openpgp.PGPOnePassSignature;
 import org.bouncycastle.openpgp.PGPOnePassSignatureList;
 import org.bouncycastle.openpgp.PGPPrivateKey;
@@ -53,23 +53,17 @@ import org.bouncycastle.openpgp.PGPSignatureGenerator;
 import org.bouncycastle.openpgp.PGPSignatureList;
 import org.bouncycastle.openpgp.PGPSignatureSubpacketGenerator;
 import org.bouncycastle.openpgp.PGPUtil;
-import org.bouncycastle.openpgp.bc.BcPGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.jcajce.JcaPGPObjectFactory;
 import org.bouncycastle.openpgp.jcajce.JcaPGPPublicKeyRingCollection;
-import org.bouncycastle.openpgp.jcajce.JcaPGPSecretKeyRing;
 import org.bouncycastle.openpgp.jcajce.JcaPGPSecretKeyRingCollection;
 import org.bouncycastle.openpgp.operator.PBESecretKeyDecryptor;
 import org.bouncycastle.openpgp.operator.PBESecretKeyEncryptor;
-import org.bouncycastle.openpgp.operator.PGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.PGPDigestCalculator;
-import org.bouncycastle.openpgp.operator.bc.BcPBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.bc.BcPGPDigestCalculatorProvider;
-import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentSignerBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPContentVerifierBuilderProvider;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPDigestCalculatorProviderBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcaPGPKeyPair;
-import org.bouncycastle.openpgp.operator.jcajce.JcePBEKeyEncryptionMethodGenerator;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyEncryptorBuilder;
 import org.bouncycastle.openpgp.operator.jcajce.JcePGPDataEncryptorBuilder;
@@ -197,6 +191,54 @@ public class Backend {
 		return false;
 	}
 	
+	public String isUsingEncryption(String filepath)
+	{
+		InputStream in;
+		String retStr = null;
+		try {
+			in = PGPUtil.getDecoderStream(new FileInputStream(filepath));
+			
+			JcaPGPObjectFactory pgpF = new JcaPGPObjectFactory(in);
+            PGPEncryptedDataList enc;
+
+            Object o = pgpF.nextObject();
+            PGPPublicKeyEncryptedData   pbe = null;
+            
+            if(o instanceof PGPEncryptedDataList)
+            {
+                PGPSecretKey secretKey = null;
+                
+            	enc = (PGPEncryptedDataList)o;
+            	Iterator<PGPEncryptedData> it = enc.getEncryptedDataObjects();
+            	PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
+            	PGPPrivateKey sKey = null;
+                
+                while (sKey == null && it.hasNext())
+                {
+                    pbe = (PGPPublicKeyEncryptedData)it.next();
+                    
+                    if(coll.contains(pbe.getKeyID()) == true)
+                    {
+                    	secretKey = coll.getSecretKey(pbe.getKeyID());
+                    	retStr = secretKey.getUserIDs().next();
+                    	return retStr;
+                    }
+                }
+            }
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		catch(PGPException e2)
+		{
+			e2.printStackTrace();
+		}
+	
+		return retStr;
+	}
+	
 	public boolean removeKeyPair(long keyID, String password)
 	{
 		try {
@@ -255,9 +297,10 @@ public class Backend {
 		
 		return false;
 	}
-	public void showPrivateKeyRingCollection()
+	public ArrayList<RingOutput> showPrivateKeyRingCollection()
 	{
 		try {
+			ArrayList<RingOutput> ret = new ArrayList<>();
 			PGPSecretKeyRingCollection coll = getSecretKeyRingCollection();
 			Iterator<PGPSecretKeyRing> iterator = coll.getKeyRings();
 			
@@ -270,15 +313,31 @@ public class Backend {
 					System.out.println("NUll");
 				}
 				PGPPublicKey publicKey = ring.getPublicKey();
-				PGPSecretKey secretKey = ring.getSecretKey();
 				
+				Date dateUntil = new Date(System.currentTimeMillis() + 1000*publicKey.getValidSeconds());
 				long keyID = publicKey.getKeyID();
 				Date creationTime = publicKey.getCreationTime();
 				byte[] fingerPrint = publicKey.getFingerprint();
 				String userID = publicKey.getUserIDs().next();
+				int first = userID.indexOf('<');
+				int second = userID.indexOf('>');
+				String name = userID.substring(0, first - 1);
+				String email = userID.substring(first + 1, second);
+				DateFormat f = new SimpleDateFormat("YYYY-MM");
+				//System.out.println(name+" "+email+" "+keyID+" "+f.format(creationTime) + " "+ f.format(dateUntil) +" "+fingerPrint);
 				
-				System.out.println(userID+" "+keyID+" "+creationTime+" "+fingerPrint);
+				RingOutput r = new RingOutput();
+				r.setEmail(email);
+				r.setFingerPrint(fingerPrint);
+				r.setKeyID(keyID);
+				r.setName(name);
+				r.setValidFrom(creationTime);
+				r.setValidUntil(dateUntil);
+				r.setPrivate(true);
+				ret.add(r);
 			}
+			
+			return ret;
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -286,34 +345,49 @@ public class Backend {
 		} catch (PGPException e) {
 			e.printStackTrace();
 		}
-		
+		return null;
 	}
 	
-	public void showPublicKeyRingCollection()
-	{
-		try {
-			PGPPublicKeyRingCollection coll = getPublicKeyRingCollection();
-			Iterator<PGPPublicKeyRing> iterator = coll.getKeyRings();
-			
-			while(iterator.hasNext())
-			{
-				PGPPublicKey publicKey = iterator.next().getPublicKey();
-				long keyID = publicKey.getKeyID();
-				Date creationTime = publicKey.getCreationTime();
-				byte[] fingerPrint = publicKey.getFingerprint();
-				String userID = publicKey.getUserIDs().next();
-				
-				System.out.println(userID+" "+keyID+" "+creationTime+" "+fingerPrint);
-				
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (PGPException e) {
-			e.printStackTrace();
-		}
-	}
+	public ArrayList<RingOutput> showPublicKeyRingCollection()
+    {
+        try {
+            PGPPublicKeyRingCollection coll = getPublicKeyRingCollection();
+            Iterator<PGPPublicKeyRing> iterator = coll.getKeyRings();
+            ArrayList<RingOutput> ret = new ArrayList<>();
+            while(iterator.hasNext())
+            {
+                PGPPublicKey publicKey = iterator.next().getPublicKey();
+                Date dateUntil = new Date(System.currentTimeMillis() + 1000*publicKey.getValidSeconds());
+                long keyID = publicKey.getKeyID();
+                Date creationTime = publicKey.getCreationTime();
+                byte[] fingerPrint = publicKey.getFingerprint();
+                String userID = publicKey.getUserIDs().next();
+                int first = userID.indexOf('<');
+                int second = userID.indexOf('>');
+                String name = userID.substring(0, first - 1);
+                String email = userID.substring(first + 1, second);
+
+                RingOutput r = new RingOutput();
+                r.setEmail(email);
+                r.setFingerPrint(fingerPrint);
+                r.setKeyID(keyID);
+                r.setName(name);
+                r.setValidFrom(creationTime);
+                r.setValidUntil(dateUntil);
+                ret.add(r);
+
+            }
+
+            return ret;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (PGPException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 	
 	public boolean exportPublicKey(long keyID, String filepath)
 	{
@@ -577,10 +651,10 @@ public class Backend {
 		return "123";
 	}
 	
-	public ArrayList<String> receiveMessage(String filepath)
+	public ArrayList<String> receiveMessage(String filepath, String passphrase)
 	{
 		InputStream in;
-		String passphrase = null;
+		//String passphrase = null;
 		boolean signFlag = false, encryptFlag = false;
 		ArrayList<String> returnMsg = new ArrayList<String>();
 		
@@ -610,7 +684,7 @@ public class Backend {
                     if(coll.contains(pbe.getKeyID()) == true)
                     {
                     	secretKey = coll.getSecretKey(pbe.getKeyID());
-                    	passphrase = getPassphrase(secretKey.getUserIDs().next());
+                    	//passphrase = getPassphrase(secretKey.getUserIDs().next());
                     
                     	sKey = secretKey
                     			.extractPrivateKey(

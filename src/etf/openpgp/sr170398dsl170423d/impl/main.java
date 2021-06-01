@@ -34,7 +34,7 @@ public class main {
 	
 	public static void receive(Backend b)
 	{
-		ArrayList<String> msg = b.receiveMessage("C:\\Users\\Sonja\\Desktop\\msg_1.gpg");
+		ArrayList<String> msg = b.receiveMessage("C:\\Users\\Sonja\\Desktop\\msg_1.gpg","123");
 		
 		for(String m: msg)
 			System.out.println(m);

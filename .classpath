@@ -9,5 +9,8 @@
 	<classpathentry kind="lib" path="C:/Users/Sonja/Desktop/zp_zp/OpenPGP_zp/libs/bcpg-jdk15on-168.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Sonja/Desktop/zp_zp/OpenPGP_zp/libs/bcprov-jdk15on-168.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Sonja/Desktop/zp_zp/OpenPGP_zp/libs/bctls-jdk15on-168.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Sonja/Desktop/zp_zp/OpenPGP_zp/libs/jgoodies-forms-1.8.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Sonja/Desktop/zp_zp/OpenPGP_zp/libs/jgoodies-forms-1.8.0-sources.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Sonja/Desktop/zp_zp/OpenPGP_zp/libs/miglayout15-swing.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
