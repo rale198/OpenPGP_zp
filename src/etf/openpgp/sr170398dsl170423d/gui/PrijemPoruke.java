@@ -205,6 +205,9 @@ private void initialize() {
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
+        	data.Lozinka = textField_1.getText();
+
+			System.out.println(data.PutanjaFajla+ " "+data.Lozinka);
 			ArrayList<String> odgovor = p.b.receiveMessage(data.PutanjaFajla, data.Lozinka);
 			for(String s: odgovor)
 				System.out.println(s);
@@ -223,7 +226,6 @@ private void initialize() {
 	            if(!textField.getText().equals("Obavezno je odabrati destinaciju za izvoz") &&!textField.getText().equals("") )
 	            {
 	            	data.PutanjaFajla = textField.getText();
-	            	data.Lozinka = textField_1.getText();
 
 	            	String s = p.b.isUsingEncryption(data.PutanjaFajla);
 	            	if(s != null)
