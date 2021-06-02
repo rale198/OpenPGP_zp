@@ -148,14 +148,7 @@ private void initialize() {
 	gbc_btnNewButton_1.gridx = 0;
 	gbc_btnNewButton_1.gridy = 9;
 	frame.getContentPane().add(btnNewButton_1, gbc_btnNewButton_1);
-	
-	//[POTREBNO JE SETOVATI DA SE U JCOMBO BOX STRPA LISTA PRIVATNIH]
-	btnNewButton_1.addActionListener(new ActionListener() {		
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			
-		}
-	});
+
 	
 	JButton btnNewButton = new JButton("Javni kljucevi");
 	btnNewButton.setFont(new Font("Tahoma", Font.BOLD, 14));
@@ -241,8 +234,8 @@ private void initialize() {
 	        		btnNewButton_1.setEnabled(true);
 	        	}else
 	        	{
-	        		btnNewButton.setEnabled(false);
-	        		btnNewButton_1.setEnabled(true);
+	        		btnNewButton.setEnabled(true);
+	        		btnNewButton_1.setEnabled(false);
 	        	}
 	        }else
 	        	System.out.println(false);
@@ -267,7 +260,9 @@ private void initialize() {
 		public void actionPerformed(ActionEvent e) {
 			if(textField.getText().equals("") || textField.getText().equals("Obavezno je odabrati destinaciju za izvoz"))
 			{
-				
+				Poruka.setText("Putanju je obavezno odabrati");
+				Poruka.setForeground(Color.RED);
+				frame.pack();
 			}else
 			{//[Putanja odabrana]
 				if(p.b.printSecretKey(selectedData.getKeyID(), textField.getText()))

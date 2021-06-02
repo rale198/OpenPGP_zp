@@ -137,35 +137,34 @@ public class SlanjePoruke {
 		cb.setVisible(visible);
 	}
 	private void DisplaySifrovanjeParam(Boolean visible) {
+		lblNewLabel.setVisible(visible);
+		chckbxNewCheckBox_6.setVisible(visible);
+		chckbxNewCheckBox_7.setVisible(visible);
 		lblNewLabel_2.setVisible(visible);
 		scrollPane_1.setVisible(visible);
 	}
 	
 	private boolean checkDataSelected() {
-		if(!chckbxNewCheckBox_6.isSelected() && !chckbxNewCheckBox_7.isSelected()) {
+		if((!chckbxNewCheckBox_8.isSelected() && !chckbxNewCheckBox_9.isSelected()) || 
+				(chckbxNewCheckBox_8.isSelected() && ( selectedDataPublicKeys.size()==0 || (!chckbxNewCheckBox_6.isSelected() && !chckbxNewCheckBox_7.isSelected())))) {
 			System.out.println("error1");
 			return false;
 		}
-		if(!chckbxNewCheckBox_8.isSelected() && !chckbxNewCheckBox_9.isSelected() || 
-				(chckbxNewCheckBox_8.isSelected() && selectedDataPublicKeys.size()==0)) {
+		if((chckbxNewCheckBox_2.isSelected() && (selectedDataPrivateKey==null || passwordField.getText().equals(""))) ||(!chckbxNewCheckBox_2.isSelected() && !chckbxNewCheckBox_3.isSelected()) ) {
 			System.out.println("error2");
 			return false;
 		}
-		if((chckbxNewCheckBox_2.isSelected() && (selectedDataPrivateKey==null || passwordField.getText().equals(""))) ||(!chckbxNewCheckBox_2.isSelected() && !chckbxNewCheckBox_3.isSelected()) ) {
+		if(!chckbxNewCheckBox.isSelected() && !chckbxNewCheckBox_1.isSelected()) {
 			System.out.println("error3");
 			return false;
 		}
-		if(!chckbxNewCheckBox.isSelected() && !chckbxNewCheckBox_1.isSelected()) {
-			System.out.println("error4");
-			return false;
-		}
 		if(!chckbxNewCheckBox_4.isSelected() && !chckbxNewCheckBox_5.isSelected()) {
-			System.out.println("error5");
+			System.out.println("error4");
 			return false;
 		}
 		if(textField.getText().equals("") || textField.getText().equals("Obavezno je odabrati destinaciju fajla"))
 		{
-			System.out.println("error6");
+			System.out.println("error5");
 			return false;
 		}else
 		return true;
@@ -181,12 +180,12 @@ private void initialize() {
     
     panel_1 = new JPanel();
     panel_1.setBackground(Color.LIGHT_GRAY);
-    frame.getContentPane().add(panel_1, BorderLayout.SOUTH);
+    frame.getContentPane().add(panel_1, BorderLayout.CENTER);
     GridBagLayout gbl_panel_1 = new GridBagLayout();
     gbl_panel_1.columnWidths = new int[]{161, 161, 161, 0};
-    gbl_panel_1.rowHeights = new int[]{0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    gbl_panel_1.rowHeights = new int[]{0, 0, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     gbl_panel_1.columnWeights = new double[]{0.0, 1.0, 0.0, Double.MIN_VALUE};
-    gbl_panel_1.rowWeights = new double[]{0.0, 0.0, 1.0, Double.MIN_VALUE, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+    gbl_panel_1.rowWeights = new double[]{0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
     panel_1.setLayout(gbl_panel_1);
     
     lblNewLabel_4 = new JLabel("Slanje poruke");
@@ -199,7 +198,38 @@ private void initialize() {
     gbc_lblNewLabel_4.gridy = 0;
     panel_1.add(lblNewLabel_4, gbc_lblNewLabel_4);
     
+    lblNewLabel_6 = new JLabel("SIFROVANJE");
+    lblNewLabel_6.setHorizontalAlignment(SwingConstants.LEFT);
+    lblNewLabel_6.setFont(new Font("Tahoma", Font.PLAIN, 20));
+    GridBagConstraints gbc_lblNewLabel_6 = new GridBagConstraints();
+    gbc_lblNewLabel_6.anchor = GridBagConstraints.WEST;
+    gbc_lblNewLabel_6.insets = new Insets(0, 0, 5, 5);
+    gbc_lblNewLabel_6.gridx = 0;
+    gbc_lblNewLabel_6.gridy = 2;
+    panel_1.add(lblNewLabel_6, gbc_lblNewLabel_6);
+    
+    chckbxNewCheckBox_8 = new JCheckBox("DA");
+    chckbxNewCheckBox_8.setBackground(Color.LIGHT_GRAY);
+    GridBagConstraints gbc_chckbxNewCheckBox_8 = new GridBagConstraints();
+    gbc_chckbxNewCheckBox_8.insets = new Insets(0, 0, 5, 5);
+    gbc_chckbxNewCheckBox_8.gridx = 1;
+    gbc_chckbxNewCheckBox_8.gridy = 2;
+    panel_1.add(chckbxNewCheckBox_8, gbc_chckbxNewCheckBox_8);
+    
+    
+
+    
+    chckbxNewCheckBox_9 = new JCheckBox("NE");
+    chckbxNewCheckBox_9.setBackground(Color.LIGHT_GRAY);
+    GridBagConstraints gbc_chckbxNewCheckBox_9 = new GridBagConstraints();
+    gbc_chckbxNewCheckBox_9.insets = new Insets(0, 0, 5, 0);
+    gbc_chckbxNewCheckBox_9.gridx = 2;
+    gbc_chckbxNewCheckBox_9.gridy = 2;
+    panel_1.add(chckbxNewCheckBox_9, gbc_chckbxNewCheckBox_9);
+    
+  
     lblNewLabel = new JLabel("ALGORITAM");
+    lblNewLabel.setVisible(true);
     lblNewLabel.setHorizontalAlignment(SwingConstants.LEFT);
     lblNewLabel.setFont(new Font("Tahoma", Font.PLAIN, 20));
     GridBagConstraints gbc_lblNewLabel = new GridBagConstraints();
@@ -207,24 +237,17 @@ private void initialize() {
     gbc_lblNewLabel.fill = GridBagConstraints.VERTICAL;
     gbc_lblNewLabel.insets = new Insets(0, 0, 5, 5);
     gbc_lblNewLabel.gridx = 0;
-    gbc_lblNewLabel.gridy = 1;
+    gbc_lblNewLabel.gridy = 3;
     panel_1.add(lblNewLabel, gbc_lblNewLabel);
     
     chckbxNewCheckBox_6 = new JCheckBox("3DES");
+    chckbxNewCheckBox_6.setVisible(true);
     chckbxNewCheckBox_6.setBackground(Color.LIGHT_GRAY);
     GridBagConstraints gbc_chckbxNewCheckBox_6 = new GridBagConstraints();
     gbc_chckbxNewCheckBox_6.insets = new Insets(0, 0, 5, 5);
     gbc_chckbxNewCheckBox_6.gridx = 1;
-    gbc_chckbxNewCheckBox_6.gridy = 1;
+    gbc_chckbxNewCheckBox_6.gridy = 3;
     panel_1.add(chckbxNewCheckBox_6, gbc_chckbxNewCheckBox_6);
-    
-    chckbxNewCheckBox_7 = new JCheckBox("CAST5");
-    chckbxNewCheckBox_7.setBackground(Color.LIGHT_GRAY);
-    GridBagConstraints gbc_chckbxNewCheckBox_7 = new GridBagConstraints();
-    gbc_chckbxNewCheckBox_7.insets = new Insets(0, 0, 5, 0);
-    gbc_chckbxNewCheckBox_7.gridx = 2;
-    gbc_chckbxNewCheckBox_7.gridy = 1;
-    panel_1.add(chckbxNewCheckBox_7, gbc_chckbxNewCheckBox_7);
     
     chckbxNewCheckBox_6.addActionListener(new ActionListener() {
     	public void actionPerformed(ActionEvent e) {
@@ -237,6 +260,15 @@ private void initialize() {
     	}
     });
     
+    chckbxNewCheckBox_7 = new JCheckBox("CAST5");
+    chckbxNewCheckBox_7.setVisible(true);
+    chckbxNewCheckBox_7.setBackground(Color.LIGHT_GRAY);
+    GridBagConstraints gbc_chckbxNewCheckBox_7 = new GridBagConstraints();
+    gbc_chckbxNewCheckBox_7.insets = new Insets(0, 0, 5, 0);
+    gbc_chckbxNewCheckBox_7.gridx = 2;
+    gbc_chckbxNewCheckBox_7.gridy = 3;
+    panel_1.add(chckbxNewCheckBox_7, gbc_chckbxNewCheckBox_7);
+    
     chckbxNewCheckBox_7.addActionListener(new ActionListener() {
     	public void actionPerformed(ActionEvent e) {
     		if(chckbxNewCheckBox_6.isSelected())
@@ -247,32 +279,6 @@ private void initialize() {
     	}
     });
     
-    lblNewLabel_6 = new JLabel("SIFROVANJE");
-    lblNewLabel_6.setHorizontalAlignment(SwingConstants.LEFT);
-    lblNewLabel_6.setFont(new Font("Tahoma", Font.PLAIN, 20));
-    GridBagConstraints gbc_lblNewLabel_6 = new GridBagConstraints();
-    gbc_lblNewLabel_6.anchor = GridBagConstraints.WEST;
-    gbc_lblNewLabel_6.insets = new Insets(0, 0, 5, 5);
-    gbc_lblNewLabel_6.gridx = 0;
-    gbc_lblNewLabel_6.gridy = 2;
-    panel_1.add(lblNewLabel_6, gbc_lblNewLabel_6);
-    
-    chckbxNewCheckBox_8 = new JCheckBox("    DA");
-    chckbxNewCheckBox_8.setBackground(Color.LIGHT_GRAY);
-    GridBagConstraints gbc_chckbxNewCheckBox_8 = new GridBagConstraints();
-    gbc_chckbxNewCheckBox_8.insets = new Insets(0, 0, 5, 5);
-    gbc_chckbxNewCheckBox_8.gridx = 1;
-    gbc_chckbxNewCheckBox_8.gridy = 2;
-    panel_1.add(chckbxNewCheckBox_8, gbc_chckbxNewCheckBox_8);
-    
-    chckbxNewCheckBox_9 = new JCheckBox("      NE");
-    chckbxNewCheckBox_9.setBackground(Color.LIGHT_GRAY);
-    GridBagConstraints gbc_chckbxNewCheckBox_9 = new GridBagConstraints();
-    gbc_chckbxNewCheckBox_9.insets = new Insets(0, 0, 5, 0);
-    gbc_chckbxNewCheckBox_9.gridx = 2;
-    gbc_chckbxNewCheckBox_9.gridy = 2;
-    panel_1.add(chckbxNewCheckBox_9, gbc_chckbxNewCheckBox_9);
-    
    
     lblNewLabel_2 = new JLabel("JAVNI KLJUCEVI");
     lblNewLabel_2.setHorizontalAlignment(SwingConstants.LEFT);
@@ -282,7 +288,7 @@ private void initialize() {
     gbc_lblNewLabel_2.fill = GridBagConstraints.VERTICAL;
     gbc_lblNewLabel_2.insets = new Insets(0, 0, 5, 5);
     gbc_lblNewLabel_2.gridx = 0;
-    gbc_lblNewLabel_2.gridy = 3;
+    gbc_lblNewLabel_2.gridy = 4;
     panel_1.add(lblNewLabel_2, gbc_lblNewLabel_2);
     
 	ArrayList<RingOutput> ret = p.b.showPublicKeyRingCollection();
@@ -318,7 +324,7 @@ private void initialize() {
      gbc_scrollPane_1.insets = new Insets(0, 0, 5, 0);
      gbc_scrollPane_1.fill = GridBagConstraints.BOTH;
      gbc_scrollPane_1.gridx = 1;
-     gbc_scrollPane_1.gridy = 3;
+     gbc_scrollPane_1.gridy = 4;
      panel_1.add(scrollPane_1, gbc_scrollPane_1);
     
     lblNewLabel_3 = new JLabel("AUTENTIKACIJA");
@@ -329,7 +335,7 @@ private void initialize() {
     gbc_lblNewLabel_3.insets = new Insets(0, 0, 5, 5);
     gbc_lblNewLabel_3.fill = GridBagConstraints.VERTICAL;
     gbc_lblNewLabel_3.gridx = 0;
-    gbc_lblNewLabel_3.gridy = 4;
+    gbc_lblNewLabel_3.gridy = 5;
     panel_1.add(lblNewLabel_3, gbc_lblNewLabel_3);
     
     chckbxNewCheckBox_2 = new JCheckBox("DA");
@@ -337,7 +343,7 @@ private void initialize() {
     GridBagConstraints gbc_chckbxNewCheckBox_2 = new GridBagConstraints();
     gbc_chckbxNewCheckBox_2.insets = new Insets(0, 0, 5, 5);
     gbc_chckbxNewCheckBox_2.gridx = 1;
-    gbc_chckbxNewCheckBox_2.gridy = 4;
+    gbc_chckbxNewCheckBox_2.gridy = 5;
     panel_1.add(chckbxNewCheckBox_2, gbc_chckbxNewCheckBox_2);
     
     chckbxNewCheckBox_3 = new JCheckBox("NE");
@@ -345,7 +351,7 @@ private void initialize() {
     GridBagConstraints gbc_chckbxNewCheckBox_3 = new GridBagConstraints();
     gbc_chckbxNewCheckBox_3.insets = new Insets(0, 0, 5, 0);
     gbc_chckbxNewCheckBox_3.gridx = 2;
-    gbc_chckbxNewCheckBox_3.gridy = 4;
+    gbc_chckbxNewCheckBox_3.gridy = 5;
     panel_1.add(chckbxNewCheckBox_3, gbc_chckbxNewCheckBox_3);
     
     chckbxNewCheckBox_2.addActionListener(new ActionListener() {
@@ -381,7 +387,7 @@ private void initialize() {
     gbc_lblNewLabel_1.anchor = GridBagConstraints.WEST;
     gbc_lblNewLabel_1.insets = new Insets(0, 0, 5, 5);
     gbc_lblNewLabel_1.gridx = 0;
-    gbc_lblNewLabel_1.gridy = 5;
+    gbc_lblNewLabel_1.gridy = 6;
     panel_1.add(lblNewLabel_1, gbc_lblNewLabel_1);
     
 	ArrayList<RingOutput> ret2 = p.b.showPrivateKeyRingCollection();
@@ -399,7 +405,7 @@ private void initialize() {
 	gbc_cb_1.anchor = GridBagConstraints.WEST;
 	gbc_cb_1.insets = new Insets(0, 0, 5, 5);
 	gbc_cb_1.gridx = 1;
-	gbc_cb_1.gridy = 5;
+	gbc_cb_1.gridy = 6;
 	panel_1.add(cb, gbc_cb_1);
 	
 	cb.addActionListener (new ActionListener () {
@@ -425,7 +431,7 @@ private void initialize() {
 	gbc_lblNewLabel_5.anchor = GridBagConstraints.WEST;
 	gbc_lblNewLabel_5.insets = new Insets(0, 0, 5, 5);
 	gbc_lblNewLabel_5.gridx = 0;
-	gbc_lblNewLabel_5.gridy = 6;
+	gbc_lblNewLabel_5.gridy = 7;
 	panel_1.add(lblNewLabel_5, gbc_lblNewLabel_5);
 	
 	passwordField = new JPasswordField();
@@ -435,7 +441,7 @@ private void initialize() {
 	gbc_passwordField.gridwidth = 2;
 	gbc_passwordField.fill = GridBagConstraints.HORIZONTAL;
 	gbc_passwordField.gridx = 1;
-	gbc_passwordField.gridy = 6;
+	gbc_passwordField.gridy = 7;
 	panel_1.add(passwordField, gbc_passwordField);
 	
 	lblNewLabel_7 = new JLabel("KOMPRESIJA");
@@ -445,7 +451,7 @@ private void initialize() {
 	gbc_lblNewLabel_7.anchor = GridBagConstraints.WEST;
 	gbc_lblNewLabel_7.insets = new Insets(0, 0, 5, 5);
 	gbc_lblNewLabel_7.gridx = 0;
-	gbc_lblNewLabel_7.gridy = 7;
+	gbc_lblNewLabel_7.gridy = 8;
 	panel_1.add(lblNewLabel_7, gbc_lblNewLabel_7);
 	
 	chckbxNewCheckBox = new JCheckBox("DA");
@@ -453,7 +459,7 @@ private void initialize() {
 	GridBagConstraints gbc_chckbxNewCheckBox = new GridBagConstraints();
 	gbc_chckbxNewCheckBox.insets = new Insets(0, 0, 5, 5);
 	gbc_chckbxNewCheckBox.gridx = 1;
-	gbc_chckbxNewCheckBox.gridy = 7;
+	gbc_chckbxNewCheckBox.gridy = 8;
 	panel_1.add(chckbxNewCheckBox, gbc_chckbxNewCheckBox);
 	
 	chckbxNewCheckBox_1 = new JCheckBox("NE");
@@ -461,7 +467,7 @@ private void initialize() {
 	GridBagConstraints gbc_chckbxNewCheckBox_1 = new GridBagConstraints();
 	gbc_chckbxNewCheckBox_1.insets = new Insets(0, 0, 5, 0);
 	gbc_chckbxNewCheckBox_1.gridx = 2;
-	gbc_chckbxNewCheckBox_1.gridy = 7;
+	gbc_chckbxNewCheckBox_1.gridy = 8;
 	panel_1.add(chckbxNewCheckBox_1, gbc_chckbxNewCheckBox_1);
 	
 	 chckbxNewCheckBox.addActionListener(new ActionListener() {
@@ -488,9 +494,10 @@ private void initialize() {
 	lblNewLabel_8.setHorizontalAlignment(SwingConstants.LEFT);
 	lblNewLabel_8.setFont(new Font("Tahoma", Font.PLAIN, 20));
 	GridBagConstraints gbc_lblNewLabel_8 = new GridBagConstraints();
+	gbc_lblNewLabel_8.anchor = GridBagConstraints.WEST;
 	gbc_lblNewLabel_8.insets = new Insets(0, 0, 5, 5);
 	gbc_lblNewLabel_8.gridx = 0;
-	gbc_lblNewLabel_8.gridy = 9;
+	gbc_lblNewLabel_8.gridy = 10;
 	panel_1.add(lblNewLabel_8, gbc_lblNewLabel_8);
 	
 	chckbxNewCheckBox_4 = new JCheckBox("DA");
@@ -498,7 +505,7 @@ private void initialize() {
 	GridBagConstraints gbc_chckbxNewCheckBox_4 = new GridBagConstraints();
 	gbc_chckbxNewCheckBox_4.insets = new Insets(0, 0, 5, 5);
 	gbc_chckbxNewCheckBox_4.gridx = 1;
-	gbc_chckbxNewCheckBox_4.gridy = 9;
+	gbc_chckbxNewCheckBox_4.gridy = 10;
 	panel_1.add(chckbxNewCheckBox_4, gbc_chckbxNewCheckBox_4);
 	
 	chckbxNewCheckBox_5 = new JCheckBox("NE");
@@ -506,7 +513,7 @@ private void initialize() {
 	GridBagConstraints gbc_chckbxNewCheckBox_5 = new GridBagConstraints();
 	gbc_chckbxNewCheckBox_5.insets = new Insets(0, 0, 5, 0);
 	gbc_chckbxNewCheckBox_5.gridx = 2;
-	gbc_chckbxNewCheckBox_5.gridy = 9;
+	gbc_chckbxNewCheckBox_5.gridy = 10;
 	panel_1.add(chckbxNewCheckBox_5, gbc_chckbxNewCheckBox_5);
 	
 	btnNewButton_1 = new JButton("ODABERI PUTANJU FAJLA\r\n");
@@ -515,7 +522,7 @@ private void initialize() {
 	gbc_btnNewButton_1.anchor = GridBagConstraints.WEST;
 	gbc_btnNewButton_1.insets = new Insets(0, 0, 5, 5);
 	gbc_btnNewButton_1.gridx = 0;
-	gbc_btnNewButton_1.gridy = 10;
+	gbc_btnNewButton_1.gridy = 11;
 	panel_1.add(btnNewButton_1, gbc_btnNewButton_1);
 	
 	btnNewButton_1.addActionListener(new ActionListener() {		
@@ -555,7 +562,7 @@ private void initialize() {
 	gbc_textField.insets = new Insets(0, 0, 5, 0);
 	gbc_textField.fill = GridBagConstraints.HORIZONTAL;
 	gbc_textField.gridx = 1;
-	gbc_textField.gridy = 10;
+	gbc_textField.gridy = 11;
 	panel_1.add(textField, gbc_textField);
 	textField.setColumns(10);
 	
@@ -563,7 +570,7 @@ private void initialize() {
 	GridBagConstraints gbc_btnNewButton = new GridBagConstraints();
 	gbc_btnNewButton.insets = new Insets(0, 0, 5, 5);
 	gbc_btnNewButton.gridx = 1;
-	gbc_btnNewButton.gridy = 11;
+	gbc_btnNewButton.gridy = 12;
 	panel_1.add(btnNewButton, gbc_btnNewButton);
 	
 	//[ENKRIPCIJA KLJUCA]
@@ -613,20 +620,21 @@ private void initialize() {
 			
 		}
 	});
-	 chckbxNewCheckBox_8.addActionListener(new ActionListener() {
-	    	public void actionPerformed(ActionEvent e) {
-	    		DisplaySifrovanjeParam(true);
-	    		frame.pack();
-	    		if(chckbxNewCheckBox_9.isSelected())
-	    		{			
-	    			chckbxNewCheckBox_9.setSelected(false);
-	    			
-	    			System.out.println("DA");
-	    		}
-	    	}
-	    });
-	    
-	    chckbxNewCheckBox_9.addActionListener(new ActionListener() {
+	
+	chckbxNewCheckBox_8.addActionListener(new ActionListener() {
+       	public void actionPerformed(ActionEvent e) {
+       		DisplaySifrovanjeParam(true);
+       		frame.pack();
+       		if(chckbxNewCheckBox_9.isSelected())
+       		{			
+       			chckbxNewCheckBox_9.setSelected(false);
+       			
+       			System.out.println("DA");
+       		}
+       	}
+       });
+	
+	  chckbxNewCheckBox_9.addActionListener(new ActionListener() {
 	    	public void actionPerformed(ActionEvent e) {
 	    		DisplaySifrovanjeParam(false);
 	    		frame.pack();
@@ -638,12 +646,34 @@ private void initialize() {
 	    		}
 	    	}
 	    });
+	  
+	  
+	chckbxNewCheckBox_4.addActionListener(new ActionListener() {
+	    	public void actionPerformed(ActionEvent e) {
+	    		if(chckbxNewCheckBox_5.isSelected())
+	    		{			
+	    			chckbxNewCheckBox_5.setSelected(false);
+	    			System.out.println("DA");
+	    		}
+	    	}
+	    });
+	    
+  chckbxNewCheckBox_5.addActionListener(new ActionListener() {
+  	public void actionPerformed(ActionEvent e) {
+  		if(chckbxNewCheckBox_4.isSelected())
+  		{
+  			chckbxNewCheckBox_4.setSelected(false);
+  			System.out.println("NE");
+  		}
+  	}
+  });
+	    
 	Poruka = new JLabel("");
 	Poruka.setFont(new Font("Tahoma", Font.PLAIN, 20));
 	GridBagConstraints gbc_Poruka = new GridBagConstraints();
 	gbc_Poruka.insets = new Insets(0, 0, 0, 5);
 	gbc_Poruka.gridx = 1;
-	gbc_Poruka.gridy = 12;
+	gbc_Poruka.gridy = 13;
 	panel_1.add(Poruka, gbc_Poruka);
 	
 

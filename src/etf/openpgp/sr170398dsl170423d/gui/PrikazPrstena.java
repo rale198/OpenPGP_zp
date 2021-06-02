@@ -70,7 +70,7 @@ private void initialize() {
 	
 
     // Column Names
-    String[] columnNames = { "TimeStamp", "Key ID", "Public Key","User ID","Key Legitimacy" };
+    String[] columnNames = { "Name", "Email", "Valid From","Valid Until","Key ID" };
     
     // Initializing the JTable
     table= new JTable(dataPrivateKeys, columnNames);
@@ -88,12 +88,11 @@ private void initialize() {
    		}
    	}
    	
- // Initializing the JTable
+   	
     table2= new JTable(dataPublicKeys, columnNames);
     table2.setBackground(Color.WHITE);
     table2.setBounds(30, 40, 400, 300);
-    // Column Names
-    String[] columnNames2 = { "TimeStamp", "Key ID", "Public Key","User ID","Key Legitimacy" };
+
     frame.getContentPane().setLayout(new BoxLayout(frame.getContentPane(), BoxLayout.X_AXIS));
       
     // adding it to JScrollPane

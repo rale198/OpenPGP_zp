@@ -74,7 +74,7 @@ public class PrijemPoruke {
 	private void resizeForm(int width,JFrame myFrame) {	
 		//myFrame.pack();
 		//myFrame.setLocation(new Point(p.getX()+p.getW()+50,p.getY()+ p.getH()/2));
-		myFrame.setBounds(p.getX()+p.getW()+50,p.getY()+ p.getH()/2,400,300);
+		myFrame.setBounds(p.getX()+p.getW()+50,p.getY()+ p.getH()/2,600,300);
 		myFrame.setVisible(true);
 		myFrame.setResizable(true);
 }
@@ -149,7 +149,7 @@ private void initialize() {
 	GridBagConstraints gbc_separator_2 = new GridBagConstraints();
 	gbc_separator_2.fill = GridBagConstraints.HORIZONTAL;
 	gbc_separator_2.gridwidth = 3;
-	gbc_separator_2.insets = new Insets(0, 0, 5, 0);
+	gbc_separator_2.insets = new Insets(0, 0, 5, 5);
 	gbc_separator_2.gridx = 0;
 	gbc_separator_2.gridy = 13;
 	frame.getContentPane().add(separator_2, gbc_separator_2);
@@ -181,7 +181,7 @@ private void initialize() {
 	GridBagConstraints gbc_separator_2_2 = new GridBagConstraints();
 	gbc_separator_2_2.fill = GridBagConstraints.HORIZONTAL;
 	gbc_separator_2_2.gridwidth = 3;
-	gbc_separator_2_2.insets = new Insets(0, 0, 5, 0);
+	gbc_separator_2_2.insets = new Insets(0, 0, 5, 5);
 	gbc_separator_2_2.gridx = 0;
 	gbc_separator_2_2.gridy = 15;
 	frame.getContentPane().add(separator_2_2, gbc_separator_2_2);
@@ -197,6 +197,15 @@ private void initialize() {
 	gbc_btnNewButton_3.gridx = 0;
 	gbc_btnNewButton_3.gridy = 17;
 	frame.getContentPane().add(btnNewButton_3, gbc_btnNewButton_3);
+	
+	JLabel Poruka = new JLabel("");
+	Poruka.setFont(new Font("Tahoma", Font.PLAIN, 17));
+	GridBagConstraints gbc_Poruka = new GridBagConstraints();
+	gbc_Poruka.gridwidth = 3;
+	gbc_Poruka.insets = new Insets(0, 0, 5, 5);
+	gbc_Poruka.gridx = 0;
+	gbc_Poruka.gridy = 18;
+	frame.getContentPane().add(Poruka, gbc_Poruka);
 	frame.setBounds(100, 100, 331, 414);
 	frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	
@@ -209,8 +218,14 @@ private void initialize() {
 
 			System.out.println(data.PutanjaFajla+ " "+data.Lozinka);
 			ArrayList<String> odgovor = p.b.receiveMessage(data.PutanjaFajla, data.Lozinka);
-			for(String s: odgovor)
-				System.out.println(s);
+			String ispis = "";
+			for(String s: odgovor) {
+				ispis += s;
+				ispis += "\n";
+			}
+				
+			Poruka.setText(ispis);
+			Poruka.setForeground(Color.green);
 		}
 	});
 	btnNewButton_2.addActionListener(new ActionListener() {		
